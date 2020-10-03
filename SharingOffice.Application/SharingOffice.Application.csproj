@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <RootNamespace>SharingOffice.Service</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="BCrypt.Net-Next" Version="4.0.0" />
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.7.1" />
+    </ItemGroup>
+    
+    
+    <ItemGroup>
+      <ProjectReference Include="..\SharingOffice.Common\SharingOffice.Common.csproj" />
+      <ProjectReference Include="..\SharingOffice.Domain\SharingOffice.Domain.csproj" />
+    </ItemGroup>
+
+</Project>

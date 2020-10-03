@@ -1,0 +1,1 @@
+dotnet ef --configuration Release --startup-project ../SharingOffice.Api/ database update --context SharingOffice.Infra.DbContexts.SharringOfficeDbContext
