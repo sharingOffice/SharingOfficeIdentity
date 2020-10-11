@@ -7,15 +7,13 @@ namespace SharingOffice.Domain.models
 {
     public class User : IdentityUser<Guid>
     {
-        
         public  string FullName {
             get
             {
                 return FirstName + " " + LastName;
             }
         }
-
-
+        
         [StringLength(32)]
         public string FirstName { get; set; }
 
@@ -30,7 +28,9 @@ namespace SharingOffice.Domain.models
 
         public string OAuthSubject { get; set; }
         public string OAuthIssuer { get; set; }
-        
+        public bool IsActive { get; set; }
+        public DateTime? LastActivityAt { get; set; }
+
         public bool OwnsToken(string token) 
         {
             return this.RefreshTokens?.Find(x => x.Token == token) != null;

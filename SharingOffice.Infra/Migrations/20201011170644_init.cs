@@ -8,27 +8,14 @@ namespace SharingOffice.Infra.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "AspNetRoles",
+                name: "Roles",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
                     Name = table.Column<string>(maxLength: 256, nullable: true),
                     NormalizedName = table.Column<string>(maxLength: 256, nullable: true),
-                    ConcurrencyStamp = table.Column<string>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AspNetRoles", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Roles",
-                columns: table => new
-                {
-                    Id = table.Column<string>(nullable: false),
-                    Name = table.Column<string>(nullable: true),
-                    NormalizedName = table.Column<string>(nullable: true),
-                    ConcurrencyStamp = table.Column<string>(nullable: true)
+                    ConcurrencyStamp = table.Column<string>(nullable: true),
+                    Description = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -60,7 +47,9 @@ namespace SharingOffice.Infra.Migrations
                     ResetToken = table.Column<string>(nullable: true),
                     ResetTokenExpires = table.Column<DateTime>(nullable: true),
                     OAuthSubject = table.Column<string>(nullable: true),
-                    OAuthIssuer = table.Column<string>(nullable: true)
+                    OAuthIssuer = table.Column<string>(nullable: true),
+                    IsActive = table.Column<bool>(nullable: false),
+                    LastActivityAt = table.Column<DateTime>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -81,9 +70,9 @@ namespace SharingOffice.Infra.Migrations
                 {
                     table.PrimaryKey("PK_RoleClaims", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_RoleClaims_AspNetRoles_RoleId",
+                        name: "FK_RoleClaims_Roles_RoleId",
                         column: x => x.RoleId,
-                        principalTable: "AspNetRoles",
+                        principalTable: "Roles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -166,9 +155,9 @@ namespace SharingOffice.Infra.Migrations
                 {
                     table.PrimaryKey("PK_UserRoles", x => new { x.UserId, x.RoleId });
                     table.ForeignKey(
-                        name: "FK_UserRoles_AspNetRoles_RoleId",
+                        name: "FK_UserRoles_Roles_RoleId",
                         column: x => x.RoleId,
-                        principalTable: "AspNetRoles",
+                        principalTable: "Roles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -201,25 +190,23 @@ namespace SharingOffice.Infra.Migrations
 
             migrationBuilder.InsertData(
                 table: "Roles",
-                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
+                columns: new[] { "Id", "ConcurrencyStamp", "Description", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { "2f151cc1-c319-40eb-8ede-9c7ac0b7b98b", "6560b08e-1961-4b14-860c-acc90dcb87a2", "Guest", null },
-                    { "6778864c-03da-40da-b30f-31e29d4bf829", "cb1d326c-99e2-47cd-9205-544b159a5037", "User", null },
-                    { "b3fc2d06-164a-4de9-af13-ef5482578c9b", "e82a4aaa-8ea6-45d2-9f2b-d6257409ca2e", "Admin", null }
+                    { new Guid("36cb8cde-a219-40b1-96f9-574d25224fd2"), "003ff056-b318-40f0-b37f-8c3db8aab29e", "Admin desc", "Admin", "ADMIN" },
+                    { new Guid("1c45fd19-86a8-4370-8645-01d67a08bfc4"), "f92e917d-d72e-4dcf-9d25-640da07b8798", "user desc", "user", "USER" },
+                    { new Guid("35524c84-107b-4311-a23e-e660fe7013fa"), "59b1d58a-2959-4fef-9dc1-e2abba277be5", "guest desc", "Guest", "GUEST" }
                 });
 
             migrationBuilder.InsertData(
                 table: "Users",
-                columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "FirstName", "LastName", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "OAuthIssuer", "OAuthSubject", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "ResetToken", "ResetTokenExpires", "Role", "SecurityStamp", "TwoFactorEnabled", "UserName" },
-                values: new object[] { new Guid("d8408c47-beba-4551-aae9-f7e7c8efb89c"), 0, "4db575fa-71f8-40fd-8655-9ed01381ad0c", "unos.bm65@gmail.com", true, "Younes", "Baghaei", false, null, "UNOS.BM65@GMAIL.COM", "UNOS.BM65@GMAIL.COM", null, null, "$2a$11$Uywq7kH6.et71Y1NaX3oD.eiuu8O/TbP6O3jCD4g0akHHyHudOwOS", "123456789", true, null, null, 0, null, false, "unos.bm65@gmail.com" });
+                columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "FirstName", "IsActive", "LastActivityAt", "LastName", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "OAuthIssuer", "OAuthSubject", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "ResetToken", "ResetTokenExpires", "Role", "SecurityStamp", "TwoFactorEnabled", "UserName" },
+                values: new object[] { new Guid("00fb3c6b-cee9-4fc5-8521-fe6faab14a45"), 0, "f95c44e9-eef6-40a9-be6a-702c387f1150", "unos.bm65@gmail.com", true, "Younes", true, null, "Baghaei", false, null, "UNOS.BM65@GMAIL.COM", "UNOS.BM65@GMAIL.COM", null, null, "$2a$11$OWGVe4PZ0S0LK/.fde3BVegjwy6qOQlpXxyhk6W.0M8GJZA22nu7G", "123456789", true, null, null, 0, null, false, "unos.bm65@gmail.com" });
 
-            migrationBuilder.CreateIndex(
-                name: "RoleNameIndex",
-                table: "AspNetRoles",
-                column: "NormalizedName",
-                unique: true,
-                filter: "[NormalizedName] IS NOT NULL");
+            migrationBuilder.InsertData(
+                table: "UserRoles",
+                columns: new[] { "UserId", "RoleId" },
+                values: new object[] { new Guid("00fb3c6b-cee9-4fc5-8521-fe6faab14a45"), new Guid("36cb8cde-a219-40b1-96f9-574d25224fd2") });
 
             migrationBuilder.CreateIndex(
                 name: "IX_RefreshTokens_UserId",
@@ -230,6 +217,13 @@ namespace SharingOffice.Infra.Migrations
                 name: "IX_RoleClaims_RoleId",
                 table: "RoleClaims",
                 column: "RoleId");
+
+            migrationBuilder.CreateIndex(
+                name: "RoleNameIndex",
+                table: "Roles",
+                column: "NormalizedName",
+                unique: true,
+                filter: "[NormalizedName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserClaims_UserId",
@@ -268,9 +262,6 @@ namespace SharingOffice.Infra.Migrations
                 name: "RoleClaims");
 
             migrationBuilder.DropTable(
-                name: "Roles");
-
-            migrationBuilder.DropTable(
                 name: "UserClaims");
 
             migrationBuilder.DropTable(
@@ -283,7 +274,7 @@ namespace SharingOffice.Infra.Migrations
                 name: "UserTokens");
 
             migrationBuilder.DropTable(
-                name: "AspNetRoles");
+                name: "Roles");
 
             migrationBuilder.DropTable(
                 name: "Users");

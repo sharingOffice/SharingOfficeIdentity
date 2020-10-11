@@ -12,9 +12,9 @@ namespace SharingOffice.Infra.Repositories
 {
     public class UserRepository : IUserRepository
     {
-        private SharringOfficeDbContext _dbContext;
+        private SharingOfficeDbContext _dbContext;
 
-        public UserRepository(SharringOfficeDbContext dbContext)
+        public UserRepository(SharingOfficeDbContext dbContext)
         {
             _dbContext = dbContext;
         }
@@ -44,6 +44,12 @@ namespace SharingOffice.Infra.Repositories
         public async Task<User> GetByEmail(string emailAddress)
         {
             var user = await _dbContext.Users.FirstOrDefaultAsync(q => q.Email == emailAddress);
+            return user;
+        }
+
+        public async Task<User> GetById(Guid id)
+        {
+            var user = await _dbContext.Users.FirstOrDefaultAsync(q => q.Id == id);
             return user;
         }
     }

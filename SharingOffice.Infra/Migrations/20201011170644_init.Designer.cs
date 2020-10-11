@@ -9,8 +9,8 @@ using SharingOffice.Infra.DbContexts;
 
 namespace SharingOffice.Infra.Migrations
 {
-    [DbContext(typeof(SharringOfficeDbContext))]
-    [Migration("20201003171313_init")]
+    [DbContext(typeof(SharingOfficeDbContext))]
+    [Migration("20201011170644_init")]
     partial class init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -20,73 +20,6 @@ namespace SharingOffice.Infra.Migrations
                 .HasAnnotation("ProductVersion", "3.1.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NormalizedName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Roles");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = "2f151cc1-c319-40eb-8ede-9c7ac0b7b98b",
-                            ConcurrencyStamp = "6560b08e-1961-4b14-860c-acc90dcb87a2",
-                            Name = "Guest"
-                        },
-                        new
-                        {
-                            Id = "6778864c-03da-40da-b30f-31e29d4bf829",
-                            ConcurrencyStamp = "cb1d326c-99e2-47cd-9205-544b159a5037",
-                            Name = "User"
-                        },
-                        new
-                        {
-                            Id = "b3fc2d06-164a-4de9-af13-ef5482578c9b",
-                            ConcurrencyStamp = "e82a4aaa-8ea6-45d2-9f2b-d6257409ca2e",
-                            Name = "Admin"
-                        });
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(256)")
-                        .HasMaxLength(256);
-
-                    b.Property<string>("NormalizedName")
-                        .HasColumnType("nvarchar(256)")
-                        .HasMaxLength(256);
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NormalizedName")
-                        .IsUnique()
-                        .HasName("RoleNameIndex")
-                        .HasFilter("[NormalizedName] IS NOT NULL");
-
-                    b.ToTable("AspNetRoles");
-                });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
@@ -168,6 +101,13 @@ namespace SharingOffice.Infra.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("UserRoles");
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = new Guid("00fb3c6b-cee9-4fc5-8521-fe6faab14a45"),
+                            RoleId = new Guid("36cb8cde-a219-40b1-96f9-574d25224fd2")
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
@@ -187,6 +127,63 @@ namespace SharingOffice.Infra.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("UserTokens");
+                });
+
+            modelBuilder.Entity("SharingOffice.Domain.models.ApplicationRole", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(256)")
+                        .HasMaxLength(256);
+
+                    b.Property<string>("NormalizedName")
+                        .HasColumnType("nvarchar(256)")
+                        .HasMaxLength(256);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasName("RoleNameIndex")
+                        .HasFilter("[NormalizedName] IS NOT NULL");
+
+                    b.ToTable("Roles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("36cb8cde-a219-40b1-96f9-574d25224fd2"),
+                            ConcurrencyStamp = "003ff056-b318-40f0-b37f-8c3db8aab29e",
+                            Description = "Admin desc",
+                            Name = "Admin",
+                            NormalizedName = "ADMIN"
+                        },
+                        new
+                        {
+                            Id = new Guid("1c45fd19-86a8-4370-8645-01d67a08bfc4"),
+                            ConcurrencyStamp = "f92e917d-d72e-4dcf-9d25-640da07b8798",
+                            Description = "user desc",
+                            Name = "user",
+                            NormalizedName = "USER"
+                        },
+                        new
+                        {
+                            Id = new Guid("35524c84-107b-4311-a23e-e660fe7013fa"),
+                            ConcurrencyStamp = "59b1d58a-2959-4fef-9dc1-e2abba277be5",
+                            Description = "guest desc",
+                            Name = "Guest",
+                            NormalizedName = "GUEST"
+                        });
                 });
 
             modelBuilder.Entity("SharingOffice.Domain.models.RefreshToken", b =>
@@ -250,6 +247,12 @@ namespace SharingOffice.Infra.Migrations
                     b.Property<string>("FirstName")
                         .HasColumnType("nvarchar(32)")
                         .HasMaxLength(32);
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastActivityAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("LastName")
                         .HasColumnType("nvarchar(32)")
@@ -318,17 +321,18 @@ namespace SharingOffice.Infra.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("d8408c47-beba-4551-aae9-f7e7c8efb89c"),
+                            Id = new Guid("00fb3c6b-cee9-4fc5-8521-fe6faab14a45"),
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "4db575fa-71f8-40fd-8655-9ed01381ad0c",
+                            ConcurrencyStamp = "f95c44e9-eef6-40a9-be6a-702c387f1150",
                             Email = "unos.bm65@gmail.com",
                             EmailConfirmed = true,
                             FirstName = "Younes",
+                            IsActive = true,
                             LastName = "Baghaei",
                             LockoutEnabled = false,
                             NormalizedEmail = "UNOS.BM65@GMAIL.COM",
                             NormalizedUserName = "UNOS.BM65@GMAIL.COM",
-                            PasswordHash = "$2a$11$Uywq7kH6.et71Y1NaX3oD.eiuu8O/TbP6O3jCD4g0akHHyHudOwOS",
+                            PasswordHash = "$2a$11$OWGVe4PZ0S0LK/.fde3BVegjwy6qOQlpXxyhk6W.0M8GJZA22nu7G",
                             PhoneNumber = "123456789",
                             PhoneNumberConfirmed = true,
                             Role = 0,
@@ -339,7 +343,7 @@ namespace SharingOffice.Infra.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
+                    b.HasOne("SharingOffice.Domain.models.ApplicationRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -366,7 +370,7 @@ namespace SharingOffice.Infra.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
+                    b.HasOne("SharingOffice.Domain.models.ApplicationRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)

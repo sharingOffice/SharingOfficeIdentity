@@ -9,5 +9,6 @@ namespace SharingOffice.Domain.Contracts.Repositories
         void Update(User account);
         Task<User> Get(string token);
         Task<User> GetByEmail(string emailAddress);
+        Task<User> GetById(Guid id);
     }
 }

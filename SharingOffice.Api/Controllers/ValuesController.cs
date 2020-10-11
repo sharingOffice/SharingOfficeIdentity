@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using SharingOffice.Api.Infra.Authorizations;
 
 namespace SharingOffice.Api.Controllers
 {
@@ -20,6 +18,12 @@ namespace SharingOffice.Api.Controllers
 
         [HttpGet]
         public IActionResult Get()
+        {
+            return Ok("true");
+        }
+
+        [HttpPost, Route("[action]"), Authorize(Roles = CustomRoles.Admin)]
+        public IActionResult CheckAuthorization()
         {
             return Ok("true");
         }

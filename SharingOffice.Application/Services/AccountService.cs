@@ -1,11 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using SharingOffice.Common.models;
 using SharingOffice.Domain.Contracts.Repositories;
@@ -18,12 +19,14 @@ namespace SharingOffice.Service.Services
     public class AccountService: IAccountService
     {
         private IUserRepository _userRepository;
-        private readonly AppSettings _appSettings;
-        
-        public AccountService(IUserRepository userRepository, IOptions<AppSettings> appSettings)
+        private IConfiguration _configuration;
+
+        public AccountService(
+            IUserRepository userRepository, 
+            IConfiguration configuration)
         {
             _userRepository = userRepository;
-            _appSettings = appSettings.Value;
+            _configuration = configuration;
         }
         
         public async Task<AuthenticateResponse> SignIn(AuthenticateRequest model, string ipAddress)
@@ -34,14 +37,12 @@ namespace SharingOffice.Service.Services
                 throw new Exception("Email or password is incorrect");
             
             // authentication successful so generate jwt and refresh tokens
-            var jwtToken = generateJwtToken(account);
-            var refreshToken = generateRefreshToken(ipAddress);
+            var jwtToken = GenerateJwtToken(account);
+            var refreshToken = GenerateRefreshToken(ipAddress);
 
             // save refresh token
             account.RefreshTokens.Add(refreshToken);
             _userRepository.Update(account);
-
-            //var response = _mapper.Map<AuthenticateResponse>(account);
 
             var response = new AuthenticateResponse()
             {
@@ -60,10 +61,10 @@ namespace SharingOffice.Service.Services
         
         public AuthenticateResponse RefreshToken(string token, string ipAddress)
         {
-            var (refreshToken, account) = getRefreshToken(token);
+            var (refreshToken, account) = GetRefreshToken(token);
 
             // replace old refresh token with a new one and save
-            var newRefreshToken = generateRefreshToken(ipAddress);
+            var newRefreshToken = GenerateRefreshToken(ipAddress);
             refreshToken.Revoked = DateTime.UtcNow;
             refreshToken.RevokedByIp = ipAddress;
             refreshToken.ReplacedByToken = newRefreshToken.Token;
@@ -71,10 +72,7 @@ namespace SharingOffice.Service.Services
             _userRepository.Update(account);
 
             // generate new jwt
-            var jwtToken = generateJwtToken(account);
-
-            //var response = _mapper.Map<AuthenticateResponse>(account);
-
+            var jwtToken = GenerateJwtToken(account);
 
             var response = new AuthenticateResponse()
             {
@@ -91,7 +89,7 @@ namespace SharingOffice.Service.Services
 
         public void RevokeToken(string token, string ipAddress)
         {
-            var (refreshToken, account) = getRefreshToken(token);
+            var (refreshToken, account) = GetRefreshToken(token);
 
             // revoke token and save
             refreshToken.Revoked = DateTime.UtcNow;
@@ -119,22 +117,20 @@ namespace SharingOffice.Service.Services
                     NormalizedUserName = email,
                     TwoFactorEnabled = false,
                     OAuthSubject = subject,
-                    OAuthIssuer = issuer
+                    OAuthIssuer = issuer,
+                    IsActive = true,
                 };
                 _userRepository.Update(user);
             }
-
             
             // authentication successful so generate jwt and refresh tokens
-            var jwtToken = generateJwtToken(user);
-            var refreshToken = generateRefreshToken(ipAddress);
+            var jwtToken = GenerateJwtToken(user);
+            var refreshToken = GenerateRefreshToken(ipAddress);
 
             // save refresh token
             user.RefreshTokens.Add(refreshToken);
             _userRepository.Update(user);
-
-            //var response = _mapper.Map<AuthenticateResponse>(account);
-
+            
             var response = new AuthenticateResponse()
             {
                 FirstName = user.FirstName,
@@ -150,21 +146,36 @@ namespace SharingOffice.Service.Services
             return response;
         }
 
-        private string generateJwtToken(User account)
+        public async Task UpdateUserLastActivityDateAsync(Guid userId)
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_appSettings.Secret);
-            var tokenDescriptor = new SecurityTokenDescriptor
+            var user = await _userRepository.GetById(userId);
+            user.LastActivityAt = DateTime.UtcNow;
+            _userRepository.Update(user);
+        }
+
+        private string GenerateJwtToken(User account)
+        {
+            var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["BearerTokens:Key"]));
+            var signingCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
+            
+            var claims = new HashSet<Claim>
             {
-                Subject = new ClaimsIdentity(new[] { new Claim("id", account.Id.ToString()) }),
-                Expires = DateTime.UtcNow.AddMinutes(3),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                new Claim("id", account.Id.ToString())
             };
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
+            
+            var jwt = new JwtSecurityToken(
+                _configuration["BearerTokens:Issuer"], // site that makes the token
+                _configuration["BearerTokens:Audience"], // site that consumes the token
+                signingCredentials: signingCredentials,
+                claims: claims,
+                notBefore: DateTime.Now.AddMinutes(-120),
+                expires: DateTime.Now.AddMinutes(2));
+
+            var token = new JwtSecurityTokenHandler().WriteToken(jwt);
+            return token;
         }
         
-        private (RefreshToken, User) getRefreshToken(string token)
+        private (RefreshToken, User) GetRefreshToken(string token)
         {
             var account = _userRepository.Get(token).GetAwaiter().GetResult();
             if (account == null) throw new Exception("Invalid token");
@@ -172,17 +183,17 @@ namespace SharingOffice.Service.Services
             if (!refreshToken.IsActive) throw new Exception("Invalid token");
             return (refreshToken, account);
         }
-        private RefreshToken generateRefreshToken(string ipAddress)
+        private RefreshToken GenerateRefreshToken(string ipAddress)
         {
             return new RefreshToken
             {
-                Token = randomTokenString(),
+                Token = RandomTokenString(),
                 Expires = DateTime.UtcNow.AddDays(7),
                 Created = DateTime.UtcNow,
                 CreatedByIp = ipAddress
             };
         }
-        private string randomTokenString()
+        private string RandomTokenString()
         {
             using var rngCryptoServiceProvider = new RNGCryptoServiceProvider();
             var randomBytes = new byte[40];

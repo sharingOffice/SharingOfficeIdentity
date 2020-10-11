@@ -16,12 +16,12 @@ namespace SharingOffice.Api.IoC
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
             services
-                .AddDbContext<SharringOfficeDbContext>(options =>
+                .AddDbContext<SharingOfficeDbContext>(options =>
                     {
                         options.UseSqlServer(configuration["ConnectionStrings:DatabaseConnectionString"],
                             sqlServerOptionsAction: sqlOptions =>
                             {
-                                sqlOptions.MigrationsAssembly(typeof(SharringOfficeDbContext).GetTypeInfo().Assembly.GetName()
+                                sqlOptions.MigrationsAssembly(typeof(SharingOfficeDbContext).GetTypeInfo().Assembly.GetName()
                                     .Name);
                                 sqlOptions.EnableRetryOnFailure(maxRetryCount: 10,
                                     maxRetryDelay: TimeSpan.FromSeconds(30), errorNumbersToAdd: null);

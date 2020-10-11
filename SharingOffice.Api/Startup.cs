@@ -1,22 +1,17 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using SharingOffice.Api.IoC;
+using SharingOffice.Api.Extensions;
+using SharingOffice.Api.Infra.Authorizations;
 using SharingOffice.Api.Middlewares;
-using SharingOffice.Common.models;
 using SharingOffice.Domain.Contracts.Repositories;
 using SharingOffice.Infra.DbContexts;
 using SharingOffice.Infra.Repositories;
@@ -38,9 +33,9 @@ namespace SharingOffice.Api
         public void ConfigureServices(IServiceCollection services)
         {
             //services.AddControllers();
-            
-            services.AddDbContext<SharringOfficeDbContext>();
-            
+
+            services.AddDbContext<SharingOfficeDbContext>();
+
             services.AddAuthentication()
                 .AddGoogle(opts =>
                 {
@@ -49,22 +44,20 @@ namespace SharingOffice.Api
                     opts.SignInScheme = IdentityConstants.ExternalScheme;
                 });
             
-            
             services.AddCors();
             services.AddControllers().AddJsonOptions(x => x.JsonSerializerOptions.IgnoreNullValues = true);
-
-            services.AddSwaggerGen();
-            services.Configure<AppSettings>(Configuration.GetSection("AppSettings"));
-            
-            services.PerformDbContextRegistration(Configuration);
+            services.AddSwaggerGenerator();
             
             // configure DI for application services
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IUserRepository, UserRepository>();
+
+            services.AddTransient<IAuthorizationHandler, RolesAuthorizationHandler>();
+            services.AddJwtAuthentication(Configuration);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider provider)
         {
             if (env.IsDevelopment())
             {
@@ -72,27 +65,25 @@ namespace SharingOffice.Api
             }
 
             app.UseSwagger();
-            app.UseSwaggerUI(x => x.SwaggerEndpoint("/swagger/v1/swagger.json", "ASP.NET Core Sign-up and Verification API"));
-
+            app.UseSwaggerUI(x =>
+                x.SwaggerEndpoint("/swagger/v1/swagger.json", "ASP.NET Core Sign-up and Verification API"));
             
             app.UseCors(x => x
                 .SetIsOriginAllowed(origin => true)
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowCredentials());
-            
+
             // global error handler
             app.UseMiddleware<ErrorHandlerMiddleware>();
 
             // custom jwt auth middleware
             app.UseMiddleware<JwtMiddleware>();
+
+            app.UseRouting();
             
-            //
-            // app.UseHttpsRedirection();
-            //
-             app.UseRouting();
-            //
-            // app.UseAuthorization();
+            app.UseAuthentication();
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
         }

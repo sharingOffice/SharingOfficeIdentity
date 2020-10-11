@@ -11,11 +11,11 @@ using BC = BCrypt.Net.BCrypt;
 
 namespace SharingOffice.Infra.DbContexts
 {
-    public class SharringOfficeDbContext: IdentityDbContext<User, IdentityRole<Guid>, Guid>
+    public class SharingOfficeDbContext : IdentityDbContext<User, ApplicationRole, Guid>
     {
         //Aggregate
         public override DbSet<User> Users { get; set; }
-        
+
         public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         public override DbSet<IdentityUserClaim<Guid>> UserClaims { get; set; }
@@ -26,13 +26,13 @@ namespace SharingOffice.Infra.DbContexts
 
         public override DbSet<IdentityUserToken<Guid>> UserTokens { get; set; }
 
-        public override DbSet<IdentityRole<Guid>> Roles { get; set; }
+        public override DbSet<ApplicationRole> Roles { get; set; }
 
         public override DbSet<IdentityRoleClaim<Guid>> RoleClaims { get; set; }
 
-        public SharringOfficeDbContext(DbContextOptions<SharringOfficeDbContext> options) : base(options)
+        public SharingOfficeDbContext(DbContextOptions<SharingOfficeDbContext> options) : base(options)
         {
-            
+
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -48,6 +48,8 @@ namespace SharingOffice.Infra.DbContexts
         {
             base.OnModelCreating(modelBuilder);
 
+
+            var userId = Guid.NewGuid();
             modelBuilder.Entity<User>().HasKey(q => q.Id);
             modelBuilder.Entity<User>().ToTable("Users");
             modelBuilder.Entity<User>().Ignore(q => q.FullName);
@@ -55,7 +57,7 @@ namespace SharingOffice.Infra.DbContexts
             {
                 new User()
                 {
-                    Id = Guid.NewGuid(),
+                    Id = userId,
                     UserName = "unos.bm65@gmail.com",
                     PasswordHash = BC.HashPassword("YYyy12!@"),
                     Email = "unos.bm65@gmail.com",
@@ -66,27 +68,57 @@ namespace SharingOffice.Infra.DbContexts
                     PhoneNumber = "123456789",
                     PhoneNumberConfirmed = true,
                     NormalizedUserName = "UNOS.BM65@GMAIL.COM",
-                    TwoFactorEnabled = false
+                    TwoFactorEnabled = false,
+                    IsActive = true,
                 }
             });
 
-            modelBuilder.Entity<RefreshToken>().HasKey(q => q.Id);
-            modelBuilder.Entity<RefreshToken>().ToTable("RefreshTokens");
-            modelBuilder.Entity<RefreshToken>().HasOne(q => q.User);
-            
-            modelBuilder.Entity<IdentityRole>().ToTable("Roles")
-                .HasData(new List<IdentityRole>()
-            {
-                new IdentityRole("Guest"),
-                new IdentityRole("User"),
-                new IdentityRole("Admin"),
-            });
+            var adminRoleId = Guid.NewGuid();
+            modelBuilder.Entity<ApplicationRole>().ToTable("Roles")
+                .HasData(new List<ApplicationRole>()
+                {
+                    new ApplicationRole()
+                    {
+                        Id = adminRoleId,
+                        Name = "Admin",
+                        Description = "Admin desc",
+                        NormalizedName = "ADMIN"
+                    },
+                    new ApplicationRole()
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "user",
+                        Description = "user desc",
+                        NormalizedName = "USER"
+                    },
+                    new ApplicationRole()
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "Guest",
+                        Description = "guest desc",
+                        NormalizedName = "GUEST"
+                    }
+                });
 
-            modelBuilder.Entity<IdentityUserRole<Guid>>().ToTable("UserRoles");
+            modelBuilder.Entity<IdentityUserRole<Guid>>().ToTable("UserRoles")
+                .HasData(new List<IdentityUserRole<Guid>>()
+                {
+                    new IdentityUserRole<Guid>()
+                    {
+                        RoleId = adminRoleId,
+                        UserId = userId
+                    }
+                });
+
+
             modelBuilder.Entity<IdentityUserClaim<Guid>>().ToTable("UserClaims");
             modelBuilder.Entity<IdentityRoleClaim<Guid>>().ToTable("RoleClaims");
             modelBuilder.Entity<IdentityUserToken<Guid>>().ToTable("UserTokens");
             modelBuilder.Entity<IdentityUserLogin<Guid>>().ToTable("UserLogins");
+
+            modelBuilder.Entity<RefreshToken>().HasKey(q => q.Id);
+            modelBuilder.Entity<RefreshToken>().ToTable("RefreshTokens");
+            modelBuilder.Entity<RefreshToken>().HasOne(q => q.User);
         }
     }
 }
